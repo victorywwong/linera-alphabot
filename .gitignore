@@ -1,0 +1,171 @@
+# ===========================
+# Linera Blockchain Files
+# ===========================
+# Local network artifacts
+infra/localnet/wallet.json
+infra/localnet/keystore.json
+infra/localnet/wallet.db/
+infra/localnet/*.db/
+infra/localnet/network.log
+infra/localnet/graphql.log
+infra/localnet/*.toml
+
+# Keep env.sh helper script
+!infra/localnet/env.sh
+
+# Root-level wallet files (testing)
+wallet.json
+keystore.json
+
+# ===========================
+# Rust / Cargo
+# ===========================
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+*.so
+*.dylib
+*.dll
+
+# ===========================
+# Node.js / JavaScript / TypeScript
+# ===========================
+node_modules/
+dist/
+build/
+out/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Allow .env templates
+!.env.example
+!.env.local.example
+!**/.env.example
+!**/.env.local.example
+
+# Lock files (keep pnpm-lock.yaml)
+package-lock.json
+yarn.lock
+!pnpm-lock.yaml
+
+# ===========================
+# Frontend (Next.js)
+# ===========================
+.next/
+.turbo/
+.vercel/
+.cache/
+
+# Testing coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# ===========================
+# Build Artifacts
+# ===========================
+*.wasm
+*.wat
+
+# ===========================
+# IDE / Editor
+# ===========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vscode-test/
+
+# JetBrains IDEs
+*.iml
+.idea/
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Emacs
+\#*\#
+.\#*
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+desktop.ini
+
+# ===========================
+# Temporary Files
+# ===========================
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# ===========================
+# Database
+# ===========================
+*.db
+*.sqlite
+*.sqlite3
+
+# But keep RocksDB directories under localnet (already covered above)
+
+# ===========================
+# Testing
+# ===========================
+.vitest/
+test-results/
+playwright-report/
+
+# ===========================
+# Documentation
+# ===========================
+# Keep all markdown files for documentation
+
+# Ignore AI assistant working directories and files
+agents_docs/
+agents/
+CLAUDE.md
+AGENTS.md
+PROGRESS_SUMMARIES/
+
+# Assets (videos, large media files)
+assets/
+
+# ===========================
+# Misc
+# ===========================
+*.pid
+*.seed
+*.pid.lock
+.pnp.*
+.yarn/

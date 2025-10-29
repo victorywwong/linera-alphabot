@@ -1,0 +1,8 @@
+[project]
+name = "bot-state"
+version = "0.1.0"
+
+[[contracts]]
+name = "bot-state"
+contract = "../target/wasm32-unknown-unknown/release/bot_state_contract.wasm"
+service = "../target/wasm32-unknown-unknown/release/bot_state_service.wasm"
