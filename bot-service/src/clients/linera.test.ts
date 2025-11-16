@@ -187,14 +187,14 @@ describe('LineraClient', () => {
           latestSignal: {
             timestamp: Date.now(),
             action: 'BUY',
-            predictedPrice: 2500,
-            confidence: 0.75,
+            predictedPriceMicro: '2500000000', // 2500 USD in micro-USD
+            confidenceBps: 7500, // 75% in basis points
             reasoning: 'Bullish trend',
-            actualPrice: null,
+            actualPriceMicro: null,
           },
-          accuracy24h: {
-            rmse: 50.5,
-            directionalAccuracy: 65.0,
+          accuracy24H: {
+            rmseMicro: '50500000', // 50.5 USD in micro-USD
+            directionalAccuracyBps: 6500, // 65% in basis points
             totalPredictions: 20,
             correctPredictions: 13,
             lastUpdated: Date.now(),
@@ -213,7 +213,10 @@ describe('LineraClient', () => {
       expect(state).toBeDefined();
       expect(state?.botId).toBe('momentum-bot');
       expect(state?.followerCount).toBe(42);
-      expect(state?.accuracy24h.directionalAccuracy).toBe(65.0);
+      expect(state?.accuracy24h.directionalAccuracy).toBe(0.65); // Converted from 6500 bps to 0.65 decimal
+      expect(state?.accuracy24h.rmse).toBe(50.5); // Converted from micro-USD to USD
+      expect(state?.latestSignal?.predicted_price).toBe(2500); // Converted from micro-USD to USD
+      expect(state?.latestSignal?.confidence).toBe(0.75); // Converted from bps to decimal
     });
 
     it('should return null on query error', async () => {

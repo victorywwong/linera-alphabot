@@ -9,10 +9,21 @@ describe('SimpleMAStrategy', () => {
   const createSnapshot = (prices: number[]): MarketSnapshot => ({
     timestamp: Date.now(),
     currentPrice: prices[prices.length - 1],
-    priceHistory: prices.map((price, i) => ({
-      timestamp: Date.now() - (prices.length - i) * 3600000, // Hourly intervals
-      price,
-    })),
+    priceHistory: prices.map((price, i) => {
+      const close = price;
+      const open = close - 1 + Math.random() * 2;
+      const high = Math.max(open, close) + Math.random() * 5;
+      const low = Math.min(open, close) - Math.random() * 5;
+      return {
+        timestamp: Date.now() - (prices.length - i) * 3600000, // Hourly intervals
+        open,
+        high,
+        low,
+        close,
+        volume: 1000000 + Math.random() * 500000,
+        price: close,
+      };
+    }),
     volume24h: 1000000,
     change24h: 0,
   });

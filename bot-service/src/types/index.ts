@@ -49,12 +49,16 @@ export interface MarketSnapshot {
 }
 
 /**
- * Historical price point
+ * Historical price point (candlestick/OHLC data)
  */
 export interface PricePoint {
   timestamp: number;
-  price: number;
-  volume?: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  price: number; // Alias for close price (for backward compatibility)
 }
 
 /**

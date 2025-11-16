@@ -4,7 +4,7 @@
  * Tests the full MCP → Linera flow with real market data
  */
 
-import { CoinGeckoFetcher } from './src/fetchers/coingecko';
+import { BinanceFetcher } from './src/fetchers/binance';
 import { SimpleMAStrategy } from './src/strategies/simple-ma';
 import { LineraClient, type LineraConfig } from './src/clients/linera';
 
@@ -22,12 +22,12 @@ async function main() {
 
   // Step 1: Initialize clients
   console.log('\n📡 Initializing clients...');
-  const fetcher = new CoinGeckoFetcher('https://api.coingecko.com/api/v3');
+  const fetcher = new BinanceFetcher('https://api.binance.com');
   const strategy = new SimpleMAStrategy();
   const lineraClient = new LineraClient(LINERA_CONFIG);
 
   // Step 2: Fetch market data
-  console.log('📊 Fetching market snapshot from CoinGecko...');
+  console.log('📊 Fetching market snapshot from Binance...');
   const snapshot = await fetcher.getMarketSnapshot();
   console.log(`  Current ETH price: $${snapshot.currentPrice.toFixed(2)}`);
   console.log(`  24h change: ${snapshot.change24h.toFixed(2)}%`);

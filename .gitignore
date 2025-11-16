@@ -1,4 +1,10 @@
 # ===========================
+# Coding agents
+# ===========================
+AGENTS.md
+CLAUDE.md
+
+# ===========================
 # Linera Blockchain Files
 # ===========================
 # Local network artifacts
@@ -149,14 +155,15 @@ playwright-report/
 # ===========================
 # Documentation
 # ===========================
-# Keep all markdown files for documentation
+# Keep all markdown files for documentation except these:
 
 # Ignore AI assistant working directories and files
 agents_docs/
 agents/
-CLAUDE.md
-AGENTS.md
 PROGRESS_SUMMARIES/
+
+# E2E testing notes (personal, not part of project docs)
+E2E_TESTING.md
 
 # Assets (videos, large media files)
 assets/

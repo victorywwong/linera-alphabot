@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Orchestrator } from './index';
 import { Action } from '../types';
-import { CoinGeckoFetcher } from '../fetchers/coingecko';
+import { BinanceFetcher } from '../fetchers/binance';
 import { SimpleMAStrategy } from '../strategies/simple-ma';
 
 // Mock the fetcher and strategy modules
-vi.mock('../fetchers/coingecko');
+vi.mock('../fetchers/binance');
 vi.mock('../strategies/simple-ma');
 
 describe('Orchestrator', () => {
@@ -15,14 +15,27 @@ describe('Orchestrator', () => {
     vi.useFakeTimers();
 
     // Setup mocks
-    vi.mocked(CoinGeckoFetcher).mockImplementation(() => ({
+    vi.mocked(BinanceFetcher).mockImplementation(() => ({
       getMarketSnapshot: vi.fn().mockResolvedValue({
         currentPrice: 2000,
         timestamp: Date.now(),
-        prices24h: Array.from({ length: 50 }, (_, i) => ({
-          price: 2000 + (i - 25) * 2,
-          timestamp: Date.now() - (50 - i) * 60 * 1000,
-        })),
+        priceHistory: Array.from({ length: 50 }, (_, i) => {
+          const close = 2000 + (i - 25) * 2;
+          const open = close - 1 + Math.random() * 2;
+          const high = Math.max(open, close) + Math.random() * 5;
+          const low = Math.min(open, close) - Math.random() * 5;
+          return {
+            timestamp: Date.now() - (50 - i) * 60 * 1000,
+            open,
+            high,
+            low,
+            close,
+            volume: 1000000 + Math.random() * 500000,
+            price: close,
+          };
+        }),
+        change24h: 2.5,
+        volume24h: 1000000,
       }),
       getCurrentPrice: vi.fn(),
     }) as any);
@@ -54,7 +67,7 @@ describe('Orchestrator', () => {
     });
 
     it('should create orchestrator with custom interval', () => {
-      const orch = new Orchestrator(5000);
+      const orch = new Orchestrator({ intervalMs: 5000 });
       expect(orch.getStatus().intervalMs).toBe(5000);
     });
   });
@@ -130,12 +143,12 @@ describe('Orchestrator', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error');
 
       // Make the mock fail for this test
-      vi.mocked(CoinGeckoFetcher).mockImplementationOnce(() => ({
+      vi.mocked(BinanceFetcher).mockImplementationOnce(() => ({
         getMarketSnapshot: vi.fn().mockRejectedValue(new Error('API error')),
         getCurrentPrice: vi.fn(),
       }) as any);
 
-      const failingOrch = new Orchestrator(1000);
+      const failingOrch = new Orchestrator({ intervalMs: 1000 });
       failingOrch.start();
 
       await vi.runOnlyPendingTimersAsync();

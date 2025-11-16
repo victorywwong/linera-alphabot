@@ -3,7 +3,31 @@
 AlphaBot is a transparent copy-trading platform where specialized AI bots publish ETH price predictions on Linera microchains. Users inspect on-chain performance, follow top bots, and receive low-latency signal notifications.
 
 - **Vision:** Prove AI trading strategies can operate transparently and verifiably on-chain.
-- **Current Status:** ✅ Wave 1 Complete – Single bot with live predictions, on-chain storage, and working dashboard.
+- **Current Status:** ✅ Wave 1 Complete – ⚙️ Wave 2 In Progress (LLM integration with Gemma 3 27B via inference.net)
+
+## 🚀 Quick Start (Docker - Recommended for Buildathon Reviewers)
+
+This project includes a Docker-based setup for easy deployment and testing:
+
+```bash
+# Build and run the entire stack (Linera network + contracts + bot-service + frontend)
+docker compose up --force-recreate
+```
+
+The application will be available at:
+- **Frontend Dashboard:** http://localhost:5173
+- **Linera Faucet:** http://localhost:8080
+- **Linera Validator Proxy:** http://localhost:9001
+- **Linera Validator:** http://localhost:13001
+
+The setup automatically:
+1. Starts a local Linera network with faucet
+2. Initializes a wallet and requests a chain
+3. Builds and publishes the bot-state smart contract
+4. Starts the bot-service for market data ingestion
+5. Launches the Next.js frontend dashboard
+
+**Note:** First build may take several minutes as it compiles Rust contracts and installs all dependencies.
 
 ## Repository Layout
 - `contracts/` – Linera application code (Rust) and integration tests.
@@ -11,17 +35,20 @@ AlphaBot is a transparent copy-trading platform where specialized AI bots publis
 - `frontend/` – Next.js dashboard displaying bot state, predictions, and accuracy metrics.
 - `infra/` – Deployment scripts, local Linera configuration, and devops assets.
 - `docs/` – Architecture blueprint and workflow guidance.
+- `Dockerfile` – Container configuration for buildathon deployment
+- `compose.yaml` – Docker Compose orchestration
+- `run.bash` – Build and execution script
 
 See `docs/architecture.md` for detailed diagrams and component responsibilities.
 
-## Quick Start
+## Local Development (Without Docker)
 
 ### Prerequisites
 - Rust (latest stable)
 - Node.js 18+ with pnpm
 - Linera CLI (`cargo install linera`)
 
-### Local Development
+### Setup
 ```bash
 # One-time setup
 make setup    # Install toolchains
@@ -42,7 +69,34 @@ cd frontend && pnpm dev
 ```bash
 make check    # Run all linters and tests
 make test     # Run test suites (contracts + bot-service + frontend)
+make e2e      # Full E2E test (Linera + contracts + integration test)
 ```
+
+See `E2E_TESTING.md` for comprehensive E2E testing guide.
+
+## Multi-Bot Parallel Deployment (Docker Compose)
+
+Run multiple bot strategies simultaneously for performance comparison:
+
+```bash
+# Build and start all bots in parallel (qwen-vertex, gpt-oss-vertex, simple-ma, deepseek)
+make bots-build
+make bots-up
+
+# View logs from all bots
+make bots-logs
+
+# Stop all bots
+make bots-down
+```
+
+Each bot runs independently with a different `STRATEGY` environment variable:
+- **bot-qwen**: Qwen 3 Coder 480B via Vertex AI
+- **bot-gpt-oss**: GPT OSS 120B via Vertex AI
+- **bot-simple-ma**: Simple Moving Average (deterministic baseline)
+- **bot-deepseek**: DeepSeek V3 via cloud API
+
+See bot-service strategy documentation for detailed configuration guides.
 
 ---
 
@@ -134,31 +188,94 @@ AlphaBot solves these by:
 
 6. **Market Data Reliability**: External APIs fail. Implementing retry logic, caching, and graceful degradation is critical for production-ready bots.
 
+## Decentralized Architecture Vision
+
+AlphaBot's true innovation lies in its **fully decentralized inference and storage architecture**, currently being developed for Wave 2+:
+
+### Beyond "Blockchain as Storage"
+
+**Current (Wave 1):** SimpleMA strategy runs off-chain in bot-service → Stores results on Linera
+**Wave 2 (In Progress):** LLM inference in service.rs using `runtime.http_request()` (atoma-demo pattern) → Gemma 3 27B via inference.net
+**Vision (Wave 3+):** User prompts on Walrus → Atoma LLM inference → Results on Linera
+
+### Three Pillars of Decentralization
+
+**1. Decentralized Storage (Walrus)**
+- User-created bot prompts stored on Walrus network
+- Immutable, content-addressed prompt artifacts
+- Each bot references a Walrus blob_id in its Linera contract
+
+**2. Decentralized Compute (Atoma Network)**
+- LLM inference executed on Atoma's distributed GPU nodes
+- Verifiable compute proofs for all predictions
+- Contract calls Atoma API: `https://api.atoma.network/v1/chat/completions`
+- Supports Llama-3.3-70B, Qwen, Mistral, and other open models
+
+**3. Decentralized Blockchain (Linera)**
+- Each bot runs on dedicated microchain
+- Orchestrates Atoma inference calls from contract service
+- Stores signals + accuracy metrics on-chain
+- Auto-generated GraphQL for all bot interactions
+
+### User-Created Bot Platform
+
+**The Real Goal:** Enable anyone to create AI trading bots through prompt engineering:
+
+```
+User writes prompt → Upload to Walrus → Deploy bot microchain →
+  → Bot fetches market data → Calls Atoma for inference →
+  → Stores prediction on Linera → Users follow successful bots
+```
+
+**No coding required** - just design your strategy as a prompt:
+- System prompt: "You are a momentum trader specializing in..."
+- User prompt template: "Current ETH price: ${price}. Predict next hour..."
+- Parameters: model, temperature, max_tokens
+
+### Current Status
+
+**Timeline:** Atoma integration planned for Wave 3+ (pending API access from Atoma team)
+**Wave 1:** ✅ Complete - Deterministic SimpleMA strategy (production-ready)
+**Wave 2:** ⚙️ In Progress - LLM integration using Linera's HTTP request capabilities (following atoma-demo pattern)
+**Roadmap:** See `PROGRESS_SUMMARIES/DECENTRALIZED_INFERENCE_ARCHITECTURE.md` for complete technical spec
+
+**This architecture directly addresses feedback that "AlphaBot uses blockchain for storage only"** - the vision leverages blockchain for orchestration, Atoma for decentralized compute, and Walrus for prompt storage. Fully decentralized, fully verifiable. Current Wave 1 demonstrates working system with path to full decentralization.
+
 ## What's Next for AlphaBot
 
-**Wave 2 (Immediate - 2-3 weeks)**:
-- Integrate LLM APIs (Gemini/Claude/GPT) for AI-driven prediction reasoning
-- Add PostgreSQL for full historical prediction archive and analytics
-- Build accuracy dashboard with RMSE, directional accuracy, and win rate charts
-- Implement follow/unfollow functionality with follower count tracking
-- WebSocket notification preview for real-time updates
+**Wave 2 (In Progress - LLM Integration + Deployment)**:
+- ⚙️ **LLM inference in service.rs** using `runtime.http_request()` (atoma-demo pattern)
+- ✅ Gemma 3 27B integration via inference.net API
+- ✅ Market data fetching from Binance in service layer
+- ✅ DeepSeek V3 strategy implemented in bot-service
+- 🔄 Testing HTTP authorization in Linera localnet (resource-control-policy)
+- 📋 Add PostgreSQL for full historical prediction archive and analytics
+- 📋 Build accuracy dashboard with RMSE, directional accuracy, and win rate charts
+- 📋 Implement follow/unfollow functionality with follower count tracking
+- 📋 Compare LLM vs SimpleMA performance on leaderboard
+- 📋 **Deploy frontend to Vercel** for global access
+- 📋 **Deploy contracts to Linera public chain** (devnet/mainnet)
+- 📋 **Deploy bot-service to GCP Cloud Run** with hourly predictions
+- 📋 WebSocket notification preview for real-time updates
 
-**Wave 3 (Short-term - 4-6 weeks)**:
-- Deploy 5 competing bots with diverse strategies (momentum, sentiment, fundamental, ensemble)
-- Build leaderboard ranked by accuracy metrics
+**Wave 3 (4-8 weeks - Decentralized Inference)**:
+- **Migrate from local LLMs to Atoma Network** for decentralized inference (pending API access)
+- **Integrate Walrus** for prompt storage and versioning
+- Enable prompt-based bot creation UI (no coding required)
+- Deploy user-created bots on dedicated microchains
 - Implement Socket.io real-time notifications (<2s latency)
-- Add bot marketplace for discovery and performance comparison
-- Enable copy-trade button for following top bots
+- Launch bot marketplace for discovery and performance comparison
+- Multi-bot leaderboard with 5+ competing strategies
 
 **Wave 4 (Long-term - 2-3 months)**:
-- Launch community bot builder platform
-- Enable prompt-based bot creation (no coding required)
-- Build MCP data marketplace for additional data sources (Twitter sentiment, on-chain metrics, news feeds)
+- Launch full community bot builder platform
 - Provide prompt templates for common strategies
 - Add backtesting interface and one-click deployment
 - Implement community sharing and prompt forking
+- Build data marketplace for additional sources (Twitter sentiment, on-chain metrics)
+- Enable revenue sharing for top bot creators
 
-**Vision**: Transform AlphaBot from a bot marketplace into a bot creation platform where anyone can build sophisticated AI trading strategies through prompt engineering and MCP data integration.
+**Vision**: Transform AlphaBot into a decentralized bot creation platform where anyone can build sophisticated AI trading strategies through prompt engineering. Prompts on Walrus, inference on Atoma, track records on Linera - fully decentralized, fully verifiable.
 
 ---
 

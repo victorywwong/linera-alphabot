@@ -1,0 +1,138 @@
+# AlphaBot Docker Compose Configuration
+# Architecture: Scheduler + External Mirror + Frontend (No databases!)
+#
+# Services:
+#   - scheduler: Cron-based prediction trigger (Just-in-Time Oracle)
+#   - external-service-mirror: HTTP proxy for contract API calls
+#   - frontend: Next.js dashboard
+#
+# Note: Linera network runs on host (not containerized)
+
+version: '3.8'
+
+services:
+  # Scheduler Service - Just-in-Time Oracle Pattern
+  # Triggers hourly predictions via GraphQL mutations
+  scheduler:
+    build:
+      context: ./scheduler
+      dockerfile: Dockerfile
+    container_name: alphabot-scheduler
+    environment:
+      - NODE_ENV=production
+      # Linera GraphQL endpoint (runs on host)
+      - LINERA_GRAPHQL_URL=${LINERA_GRAPHQL_URL:-http://host.docker.internal:8081}
+    env_file:
+      - ./scheduler/.env
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - alphabot-network
+    # Allow scheduler to reach host Linera service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # External Service Mirror - HTTP Proxy
+  # Allows contracts to call Binance and inference.net via localhost
+  external-service-mirror:
+    build:
+      context: ./external-service-mirror
+      dockerfile: Dockerfile
+    container_name: alphabot-mirror
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+    env_file:
+      - ./external-service-mirror/.env
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - alphabot-network
+
+  # Frontend Dashboard - Next.js Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # GraphQL URL passed at build time
+        - NEXT_PUBLIC_LINERA_GRAPHQL_URL=${NEXT_PUBLIC_LINERA_GRAPHQL_URL:-http://localhost:8081}
+    container_name: alphabot-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Also pass at runtime for Next.js
+      - NEXT_PUBLIC_LINERA_GRAPHQL_URL=${NEXT_PUBLIC_LINERA_GRAPHQL_URL:-http://localhost:8081}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - alphabot-network
+    depends_on:
+      external-service-mirror:
+        condition: service_healthy
+
+networks:
+  alphabot-network:
+    name: alphabot-network
+    driver: bridge
+
+# =============================================================================
+# USAGE
+# =============================================================================
+#
+# Development (Localnet):
+# ----------------------
+# 1. Start Linera network on host:
+#    make linera-local && make wallet-init
+#
+# 2. Deploy contract:
+#    cd contracts && linera project publish-and-create bot-state --json-argument '"my-bot"'
+#
+# 3. Start services:
+#    docker compose up -d
+#
+# 4. View logs:
+#    docker compose logs -f scheduler
+#
+# Production (Testnet):
+# --------------------
+# See docs/TESTNET_DEPLOYMENT.md
+#
+# Environment Variables:
+# ---------------------
+# LINERA_GRAPHQL_URL - Linera service endpoint (default: http://host.docker.internal:8081)
+# NEXT_PUBLIC_LINERA_GRAPHQL_URL - Frontend GraphQL URL (must include full chain/app path)
+#
+# Required .env files:
+# - scheduler/.env (BOT_CHAIN_ID, BOT_APP_ID, INFERENCE_API_KEY)
+# - external-service-mirror/.env (INFERENCE_API_KEY)
+# - frontend/.env.local (NEXT_PUBLIC_LINERA_GRAPHQL_URL)
+#
+# =============================================================================

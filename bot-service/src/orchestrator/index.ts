@@ -1,7 +1,10 @@
 import { BinanceFetcher } from '../fetchers/binance';
 import { SimpleMAStrategy } from '../strategies/simple-ma';
+import { DeepSeekStrategy } from '../strategies/llm-deepseek';
+import { SchematronStrategy } from '../strategies/llm-schematron';
+import { QwenVertexStrategy, GPTOSSVertexStrategy } from '../strategies/llm-vertex-ai';
 import { LineraClient, type LineraConfig } from '../clients/linera';
-import type { Signal } from '../types';
+import type { Signal, Strategy } from '../types';
 
 /**
  * Orchestrator configuration
@@ -19,7 +22,7 @@ export interface OrchestratorConfig {
  */
 export class Orchestrator {
   private fetcher: BinanceFetcher;
-  private strategy: SimpleMAStrategy;
+  private strategy: Strategy;
   private lineraClient: LineraClient | null = null;
   private intervalId: NodeJS.Timeout | null = null;
   private isRunning = false;
@@ -29,11 +32,41 @@ export class Orchestrator {
     const baseUrl = process.env.BINANCE_BASE_URL || 'https://api.binance.com';
 
     this.fetcher = new BinanceFetcher(baseUrl);
-    this.strategy = new SimpleMAStrategy();
+    this.strategy = this.createStrategy();
     this.intervalMs = config.intervalMs || 60_000;
 
     if (config.lineraConfig) {
       this.lineraClient = new LineraClient(config.lineraConfig);
+    }
+  }
+
+  /**
+   * Create strategy based on STRATEGY environment variable
+   */
+  private createStrategy(): Strategy {
+    const strategyType = process.env.STRATEGY || 'simple-ma';
+
+    switch (strategyType.toLowerCase()) {
+      case 'schematron':
+        console.log('[Orchestrator] Using Schematron 3B strategy (Atoma inference network)');
+        return new SchematronStrategy();
+
+      case 'deepseek':
+        console.log('[Orchestrator] Using DeepSeek V3 strategy (Deepseek endpoint-supported)');
+        return new DeepSeekStrategy();
+
+      case 'qwen-vertex':
+        console.log('[Orchestrator] Using Qwen 3 Coder 480B via Vertex AI SDK (Atoma-supported)');
+        return new QwenVertexStrategy();
+
+      case 'gpt-oss-vertex':
+        console.log('[Orchestrator] Using GPT OSS 120B via Vertex AI SDK (Atoma-supported)');
+        return new GPTOSSVertexStrategy();
+
+      case 'simple-ma':
+      default:
+        console.log('[Orchestrator] Using SimpleMA strategy (baseline)');
+        return new SimpleMAStrategy();
     }
   }
 

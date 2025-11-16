@@ -66,19 +66,26 @@ export class BinanceFetcher {
   async getMarketSnapshot(): Promise<MarketSnapshot> {
     const [currentData, klines] = await Promise.all([
       this.getCurrentPrice(),
-      this.getKlines('1h', 168), // Last 7 days (168 hours) of hourly data
+      this.getKlines('1h', 200), // Last 200 hours (~8 days) of hourly OHLC data
     ]);
 
     const currentPrice = parseFloat(currentData.lastPrice);
     const volume24h = parseFloat(currentData.quoteVolume);
     const change24h = parseFloat(currentData.priceChangePercent);
 
-    // Convert klines to PricePoint[]
-    const priceHistory: PricePoint[] = klines.map((kline) => ({
-      timestamp: kline[0], // Open time
-      price: parseFloat(kline[4]), // Close price
-      volume: parseFloat(kline[5]), // Volume
-    }));
+    // Convert klines to PricePoint[] with full OHLC data
+    const priceHistory: PricePoint[] = klines.map((kline) => {
+      const close = parseFloat(kline[4]);
+      return {
+        timestamp: kline[0], // Open time
+        open: parseFloat(kline[1]), // Open price
+        high: parseFloat(kline[2]), // High price
+        low: parseFloat(kline[3]), // Low price
+        close, // Close price
+        volume: parseFloat(kline[5]), // Volume
+        price: close, // Alias for backward compatibility
+      };
+    });
 
     return {
       timestamp: Date.now(),

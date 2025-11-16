@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+.github
+
+# Build artifacts
+target
+dist
+node_modules
+.next
+out
+
+# Local development
+infra/localnet
+*.log
+wallet.json
+
+# IDEs
+.vscode
+.idea
+.claude
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+docs
+agents_docs
+PROGRESS_SUMMARIES
+
+# Tests
+**/*.test.ts
+**/*.spec.ts
+**/tests/
+vitest.config.ts
+
+# Environment files (will be set at runtime)
+.env
+.env.local
+.env.*.local

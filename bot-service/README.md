@@ -41,6 +41,20 @@ npx tsx test-linera-simple.ts
 
 See `TESTING_GUIDE.md` for detailed testing instructions.
 
+## Docker Deployment
+
+Run multiple bot strategies in parallel using Docker Compose:
+
+```bash
+# From project root
+make bots-build    # Build images
+make bots-up       # Start all bots (qwen, gpt-oss, simple-ma, deepseek)
+make bots-logs     # View logs
+make bots-down     # Stop all bots
+```
+
+See `../PROGRESS_SUMMARIES/DOCKER.md` for detailed deployment guide.
+
 ## Note on Naming
 
 This directory was previously named `mcp/` (Market Context Protocol - a custom name).
