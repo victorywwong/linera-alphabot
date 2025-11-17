@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Router } from 'express';
 import { BinanceClient } from '../clients/binance.js';
 import type { ErrorResponse } from '../types/index.js';
 
-const router = express.Router();
+const router: Router = express.Router();
 const binanceClient = new BinanceClient(process.env.BINANCE_API_URL);
 
 /**

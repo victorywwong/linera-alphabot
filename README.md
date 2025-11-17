@@ -5,29 +5,41 @@ AlphaBot is a transparent copy-trading platform where specialized AI bots publis
 - **Vision:** Prove AI trading strategies can operate transparently and verifiably on-chain.
 - **Current Status:** ✅ Wave 1 Complete – ⚙️ Wave 2 In Progress (LLM integration with Gemma 3 27B via inference.net)
 
-## 🚀 Quick Start (Docker - Recommended for Buildathon Reviewers)
+## 🚀 Quick Start
 
-This project includes a Docker-based setup for easy deployment and testing:
+**New users:** See **[QUICKSTART.md](./QUICKSTART.md)** for a step-by-step guide to get running in under 10 minutes!
+
+### TL;DR (For Experienced Users)
 
 ```bash
-# Build and run the entire stack (Linera network + contracts + bot-service + frontend)
-docker compose up --force-recreate
+# 1. Setup environment
+./setup-env.sh
+
+# 2. Start Linera network (host)
+make linera-local && make wallet-init
+
+# 3. Deploy contract
+export LINERA_WALLET="$PWD/infra/localnet/wallet.json"
+export LINERA_KEYSTORE="$PWD/infra/localnet/keystore.json"
+export LINERA_STORAGE="rocksdb:$PWD/infra/localnet/wallet.db"
+cd contracts && linera project publish-and-create bot-state --json-argument '"my-bot"'
+
+# 4. Update scheduler/.env and frontend/.env.local with GraphQL URLs
+
+# 5. Start services
+docker compose up -d
+
+# 6. Open http://localhost:3000
 ```
 
-The application will be available at:
-- **Frontend Dashboard:** http://localhost:5173
-- **Linera Faucet:** http://localhost:8080
-- **Linera Validator Proxy:** http://localhost:9001
-- **Linera Validator:** http://localhost:13001
+### Docker Compose Services
 
-The setup automatically:
-1. Starts a local Linera network with faucet
-2. Initializes a wallet and requests a chain
-3. Builds and publishes the bot-state smart contract
-4. Starts the bot-service for market data ingestion
-5. Launches the Next.js frontend dashboard
+The application consists of three containerized services:
+- **scheduler** (port internal): Cron-based prediction trigger (Just-in-Time Oracle)
+- **external-service-mirror** (port 3002): HTTP proxy for contract API calls
+- **frontend** (port 3000): Next.js dashboard
 
-**Note:** First build may take several minutes as it compiles Rust contracts and installs all dependencies.
+**Note:** Linera network runs on the host machine, not in Docker.
 
 ## Repository Layout
 - `contracts/` – Linera application code (Rust) and integration tests.

@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Router } from 'express';
 import { InferenceClient } from '../clients/inference.js';
 import type { ChatCompletionRequest, ErrorResponse } from '../types/index.js';
 
-const router = express.Router();
+const router: Router = express.Router();
 
 // Create client (no API key needed - we forward from request header)
 const inferenceClient = new InferenceClient(process.env.INFERENCE_API_URL);

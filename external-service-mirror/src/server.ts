@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { Express } from 'express';
 import binanceRoutes from './routes/binance.js';
 import inferenceRoutes from './routes/inference.js';
 
 /**
  * Create and configure Express app
  */
-export function createServer() {
+export function createServer(): Express {
   const app = express();
 
   // Middleware

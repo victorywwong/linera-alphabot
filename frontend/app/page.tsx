@@ -71,7 +71,7 @@ export default function Home() {
               AlphaBot Dashboard
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              Real-time ETH price predictions powered by Linera
+              Real-time ETH price predictions on Linera
             </p>
           </div>
         </div>
